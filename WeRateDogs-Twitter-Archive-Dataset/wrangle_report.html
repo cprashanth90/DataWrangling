@@ -13212,7 +13212,10 @@ div#notebook {
 <p><strong>6. Bad Rating Numerators and Denominators</strong>:</p>
 <ul>
 <li>There are some unclean data with the Rating Numerators and denominators. There is one tweet with a rating of 9/10 but the numerator and denominator columns are 24,7 respectively and 1 tweet with a denominator value equals to 0. These appear to be parsing errors.</li>
-<li>Clean: Spot check manually and clean up such data points with pandas replace.</li>
+<li>Also, there are some rows in the data set where decimal ratings of the numerators are wrongly parsed. For example, tweet ID: 883482846933004288 actually has a ranking of 13.5, but it is wrongly parsed as 5.</li>
+<li>Clean:  <br></li>
+<li>Spot check manually and clean up such data points with pandas replace.</li>
+<li>Use regular expressions to identify rows with decimal ratings.</li>
 </ul>
 <p><strong>7. No standardization of Ratings</strong>:</p>
 <ul>
@@ -13224,7 +13227,7 @@ div#notebook {
 <li>Some dogs are rated very highly or probably there is a clear bias or is done as a joke, such as the one that is rated at 420/10 or 1776/10. </li>
 <li>Clean: Drop these rows that have such a rating threshold of standardized numerator rating more than 20.</li>
 </ul>
-<p><strong>9. We aren't really using the Retweet and replies to user data:</strong></p>
+<p><strong>9. We aren't really using the Retweet and replies data:</strong></p>
 <ul>
 <li>Retweet statuses are not going to be a part of our analysis. Also there are too many null values in these columns. Only 181 are not null. We can drop these columns once we are done retrieving data from the Twitter API. The same applies to in_reply_to_user_id and in_reply_to_status_id columns in the dataset.</li>
 </ul>
