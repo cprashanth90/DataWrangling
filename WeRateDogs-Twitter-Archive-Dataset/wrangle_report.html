@@ -13152,7 +13152,7 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The WeRateDogs Twitter Archive contains observations of 2375 tweets. There are 17 columns in this original dataset. There were several quality issues in this twitter archive and a few tidiness issues found. The one main quality issue drawback I found was the presence of null values in the dataset.</p>
+<p>The WeRateDogs Twitter Archive contains observations of 2375 tweets. There are 17 columns in this original dataset. There were several quality issues in this twitter archive and a few tidiness issues found.</p>
 <p>The Neural network predictions dataset is a table of 2075 observations with 12 columns. Each observation is a tweet image - contains the top 3 dog breed prediction, confidence levels and an indicator if the predicted image is a dog.</p>
 
 </div>
@@ -13161,7 +13161,14 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Assessment">Assessment<a class="anchor-link" href="#Assessment">&#182;</a></h3>
+<h2 id="WeRate-Dogs-Twitter-Archive-data">WeRate Dogs Twitter Archive data<a class="anchor-link" href="#WeRate-Dogs-Twitter-Archive-data">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Quality-Issues">Quality Issues<a class="anchor-link" href="#Quality-Issues">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -13176,15 +13183,50 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p><strong>1. Inappropriate types for Timestamp columns</strong></p>
 <ul>
-<li><p>"timestamp" column in werate_dogs_twitter_data is of type str. Converting this to object timestamp can be useful for us while analyzing the data.</p>
-</li>
-<li><p>Missing values in retweeted_status_id, retweeted_user_id, retweeted_status_timestamp</p>
-</li>
-<li>retweeted_status_id, retweeted_user_id are of "np.float64" datatype. It would be useful, if these are integer values.</li>
-<li>dog names Null values: 'name' column contains values such as "None". It appears that the parsing of the names haven't been successful. We can treat these as missing values.</li>
+<li>Assess: "timestamp" column in werate_dogs_twitter_data is of type str. Converting this to object timestamp can be useful for us   while analyzing the data.</li>
+<li>Clean: Convert "timestamp" column to datetime object using pandas to_datetime method.</li>
+</ul>
+<p><strong>2. Inappropriate datatypes</strong>:</p>
+<ul>
+<li>Assess: Columns retweeted_status_id, retweeted_user_id are floating point numbers type (np.float64) in scientific notation. This poses a serious issue when querying the Twitter API for data. It will be very helpful to convert these to integers.</li>
+<li>Clean: Convert datatypes of retweeted_status_id, retweeted_user_id from np.float64 to np.int64.</li>
+</ul>
+<p><strong>3. Missing Values in certain important columns</strong></p>
+<ul>
+<li>Missing values in retweeted_status_id, retweeted_user_id, retweeted_status_timestamp. Ideally, we cannot do anything about this because the twitter API cannot help us with providing information on these values. But, if we were to use a NULL value to retrieve data from Twitter's API, we get errors. We need to mitigate this.</li>
+<li>Clean: For better exception management, we can set these NULL values to a value of -1. With a TweetID value = -1, Tweepy returns a constant Exception with code = 8. Set all types of NULL values in columns 'retweeted_status_id', 'retweeted_user_id' to a value -1.</li>
+</ul>
+<p><strong>4. Missing/non-existing tweet data</strong></p>
+<ul>
+<li>Some "tweet_id" values result in missing/non-existing tweets and are in some cases deleted tweet IDs. For example: in index #21, Tweet ID: 888202515573088257 doesnt exist. We can however attempt to get the details of this tweet from the expanded_url column.</li>
+<li>Clean: Retreive correct tweet ID's from the twitter API using the part of the tweet from the exapnded_url columns.</li>
+</ul>
+<p><strong>5. Incorrect dog names</strong></p>
+<ul>
+<li>dog names Null values: 'name' column contains values such as "None". It appears that the parsing of the names haven't been successful. We can treat these as missing values.- </li>
 <li>dog names unclean values: There are values in the 'name' column such as "a", "getting", "actually", etc.. These are not real dog names. These appear to be errors from trying to parse out the names of dogs.</li>
-<li>Some "tweet_id" values result in missing/non-existing tweets and are in some cases wrong tweet IDs. For example: in index #21, Tweet ID: 888202515573088257 doesnt exist. We can however attempt to get the details of this tweet from the expanded_url column.</li>
+<li>Clean: Fill in dog names for such unclean values using the corrected dog names in a csvfile. The CSV file contains three columns, Index number of the corresponding tweet, value to be searched for and value to be replaced with.</li>
+</ul>
+<p><strong>6. Bad Rating Numerators and Denominators</strong>:</p>
+<ul>
+<li>There are some unclean data with the Rating Numerators and denominators. There is one tweet with a rating of 9/10 but the numerator and denominator columns are 24,7 respectively and 1 tweet with a denominator value equals to 0. These appear to be parsing errors.</li>
+<li>Clean: Spot check manually and clean up such data points with pandas replace.</li>
+</ul>
+<p><strong>7. No standardization of Ratings</strong>:</p>
+<ul>
+<li>There are some values of rating denominators in the dataset that are as high as 170. The corresponding rating numerator for this dog is 204. This clearly indicates that the dog is rated at 12/10 or a 120 on a percentage score basis. Standardinzing will help us with analysis.</li>
+<li>Clean: If rating denominators are greater than 10, then Standardize Rating numerator as follows: (rating_numerator)*10/(rating_denominator)</li>
+</ul>
+<p><strong>8. Mistakes or outlier values in the rating_numerators columns:</strong></p>
+<ul>
+<li>Some dogs are rated very highly or probably there is a clear bias or is done as a joke, such as the one that is rated at 420/10 or 1776/10. </li>
+<li>Clean: Drop these rows that have such a rating threshold of standardized numerator rating more than 20.</li>
+</ul>
+<p><strong>9. We aren't really using the Retweet and replies to user data:</strong></p>
+<ul>
+<li>Retweet statuses are not going to be a part of our analysis. Also there are too many null values in these columns. Only 181 are not null. We can drop these columns once we are done retrieving data from the Twitter API. The same applies to in_reply_to_user_id and in_reply_to_status_id columns in the dataset.</li>
 </ul>
 
 </div>
@@ -13193,14 +13235,7 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Clean">Clean<a class="anchor-link" href="#Clean">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Here are the steps taken to clean up the quality issues found above.</p>
+<p>Below is a summary of the assessment and cleaning of the Tidiness issues in the WeRateDogs Twitter Archive dataset.</p>
 
 </div>
 </div>
@@ -13208,40 +13243,39 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Tidiness-Issues">Tidiness Issues<a class="anchor-link" href="#Tidiness-Issues">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><strong>1. Column 'dog stage' missing: 4 variable values as column headers</strong></p>
 <ul>
-<li><p>Convert "timestamp" column to datetime object using pandas to_datetime method.</p>
-</li>
-<li><p>retweeted_status_id, retweeted_user_id are of "np.float64" datatype. Convert to int64. Fill null values in these columns   with value -1.</p>
-</li>
-<li><p>replace bad data for dog name with data from the tweet text. The value to search for and the value to replace with are found in file missing_dog_names.csv.</p>
-</li>
-<li><p>Replaced these unclean values with "None".</p>
-</li>
-<li><p>Some "tweet_id" values result in missing/non-existing tweets and are in some cases wrong tweet IDs. For such tweet IDs replace tweet_id with the tweet_id found in the expanded_url column. I will try to achieve this when I query the twitter API below. These values will be retrieved later while querying the twitter API under section "Gathering Data - Getting data from twitter API".</p>
-</li>
+<li>Columns doggo, floofer, pupper, puppo are values and not variable names; this violates the 3rd rule of Tidy data. Each observational unit does not form a table. There are 14 observations in the dataset for which there are multiple dog stages. </li>
+<li>Clean: Melt columns "dogg", "floofer", "pupper" ,"puppo" into 1 dog_stage column. For multiple value dog-stage value, insert a "-" between the stages.</li>
 </ul>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Here is a quick summary of the tidiness issues that were found in the WeRateDogs Twitter Archive dataset.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><strong>Tidiness</strong></p>
+<p><strong>2. Column "source" contains 2 variables in a single column (source_url, source_description)</strong>:</p>
 <ul>
-<li>Columns doggo, floofer, pupper, puppo are values and not variable names; this violates the 3rd rule of Tidy data. Each observational unit does not form a table.</li>
 <li>Column "source" in the WeRateDogsTwitter Archive data contains two variables, the website reference of the source and the description of the source as a HTML tag.</li>
 <li>Column 'expanded_urls' contains multiple URLs, some of which are repetitions of the same photo URLs. Remove this column from the twitter archive dataset and create a new dataframe for the mediaURLs.</li>
 </ul>
+<p><strong>3. Column rating_Denominator is redundant after standardization</strong></p>
+<ul>
+<li>Drop column rating_denominator after standardiing the rating_numerator column. </li>
+</ul>
+<p><strong>4. Column 'expanded_urls' contains multiple URLs, some of which are repetitions of the same photo URLs.</strong></p>
+<ul>
+<li>Remove this column from the twitter archive dataset and create a new dataframe for the mediaURLs. These can be merged later when out dataset obeys the tidy data conditions.</li>
+</ul>
 
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Predictions-dataframe">Predictions dataframe<a class="anchor-link" href="#Predictions-dataframe">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -13265,9 +13299,9 @@ div#notebook {
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><strong>Quality</strong></p>
 <ul>
-<li><p>Column "tweet_id" is of type object. Each tweet_id is a string, when it will be useful to have tweet_id as an int64 object.</p>
+<li><p>Column "tweet_id" is of type object. Each tweet_id is a string, when it will be useful to have tweet_id as an integer.</p>
 </li>
-<li><p>Columns with predictions, i.e "p1_dog","p2_dog", "p3_dog" are also objects. it will be useful to have these objects as a bool (True/False) data type.</p>
+<li><p>Columns with predictions, i.e "p1_dog","p2_dog", "p3_dog" are strings. it will be useful to have these objects as a bool (True/False) data type.</p>
 </li>
 <li><p>Columns with predicted confidence values p1_conf, p2_conf, p3_conf are also of type object. It will be useful to convert these into float64 data type.</p>
 </li>
@@ -13291,6 +13325,13 @@ div#notebook {
 <li>One issue with the Predictions dataframe is that variable values appear in column names. Columns pn, pn_conf, pn_dog where n=1,2,3 can be melt into a table structure as follows: 'predictionlevelrank', 'PredictedValue', 'confidence value', "is dog" columns in the 'predictions' dataframe.</li>
 </ul>
 
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Clean-Predictions-Dataframe">Clean Predictions Dataframe<a class="anchor-link" href="#Clean-Predictions-Dataframe">&#182;</a></h2>
 </div>
 </div>
 </div>
