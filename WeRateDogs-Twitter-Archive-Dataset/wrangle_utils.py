@@ -74,14 +74,8 @@ def get_json_data(api,row):
     tweet_id = row["tweet_id"]
     status = get_json_obj_from_twitter(api,tweet_id)
     
-    # If this Tweet ID does not exist in the Twitter API, lets try getting the status from the 'retweeted_status_id' field.
-    if not status:
-        if row["retweeted_status_id"] != -1:
-            tweet_id = row["retweeted_status_id"]
-            print ("Trying Retweet ID: {}".format(tweet_id))
-            status = get_json_obj_from_twitter(api,tweet_id)
     
-    # If this doesnt work as well, Attempt fetching status using the 'expanded_urls' field
+    # If this Tweet ID does not exist in the Twitter API, lets try getting the status from the 'retweeted_status_id' field.
     if not status:
         expanded_url = row["expanded_urls"]
         tweet_id = get_tweet_id_from_urls(expanded_url)

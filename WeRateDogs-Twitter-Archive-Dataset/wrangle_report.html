@@ -13229,7 +13229,7 @@ div#notebook {
 </ul>
 <p><strong>9. We aren't really using the Retweet and replies data:</strong></p>
 <ul>
-<li>Retweet statuses are not going to be a part of our analysis. Also there are too many null values in these columns. Only 181 are not null. We can drop these columns once we are done retrieving data from the Twitter API. The same applies to in_reply_to_user_id and in_reply_to_status_id columns in the dataset.</li>
+<li>Retweet statuses are not going to be a part of our analysis. Also there are too many null values in these columns. Only 181 out of 2356 are not null. These rows where retweet text is found are removed from the dataset. We can drop these columns once we are done retrieving data from the Twitter API. The same applies to in_reply_to_user_id and in_reply_to_status_id columns in the dataset.</li>
 </ul>
 
 </div>
